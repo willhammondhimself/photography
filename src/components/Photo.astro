@@ -1,0 +1,42 @@
+---
+// The one place a photograph becomes markup. <picture> is the frame: it carries the
+// dominant color, the optional blurred LQIP, and the native aspect ratio.
+import { Picture } from 'astro:assets';
+import type { Photo } from '../lib/photos';
+import { photoVars, widthsFor } from '../lib/images';
+
+interface Props {
+  photo: Photo;
+  widths: readonly number[];
+  sizes: string;
+  lqip?: boolean;
+  priority?: boolean;
+  eager?: boolean;
+  hero?: boolean;
+  class?: string;
+  decorative?: boolean;
+  style?: string;
+}
+
+const { photo, widths, sizes, lqip = false, priority = false, eager = false, hero = false, decorative = false, style = '' } = Astro.props;
+const cls = ['frame', lqip && 'has-lqip', Astro.props.class].filter(Boolean).join(' ');
+const focus = photo.focus ? `${photo.focus[0]}% ${photo.focus[1]}%` : '50% 50%';
+---
+
+<Picture
+  src={photo.image}
+  alt={decorative ? '' : photo.alt}
+  width={photo.width}
+  height={photo.height}
+  widths={widthsFor(photo, widths)}
+  sizes={sizes}
+  formats={['avif', 'webp']}
+  fallbackFormat="jpg"
+  quality={80}
+  priority={priority}
+  loading={priority || eager ? 'eager' : 'lazy'}
+  decoding={priority ? 'sync' : 'async'}
+  data-fade
+  data-hero={hero ? '' : undefined}
+  pictureAttributes={{ class: cls, style: `${photoVars(photo, lqip)};--focus:${focus}${style ? ';' + style : ''}` }}
+/>

@@ -1,0 +1,144 @@
+[
+  {
+    "slug": "yosemite",
+    "number": 1,
+    "title": "Yosemite",
+    "kind": "place",
+    "place": "Yosemite Valley",
+    "dates": "",
+    "blurb": "El Capitan and the valley around it, in evening light, mist, storm cloud and at night. The lights on the wall in the night frame are climbers' headlamps.",
+    "cover": "el-capitan-evening-light",
+    "plates": [
+      {
+        "photo": "el-capitan-evening-light",
+        "plate": "wide"
+      },
+      {
+        "photo": "tunnel-view-in-mist",
+        "plate": "left"
+      },
+      {
+        "photo": "el-capitan-side-light",
+        "plate": "right"
+      },
+      {
+        "photo": "cathedral-spires-in-monochrome",
+        "plate": "wide"
+      },
+      {
+        "photo": "el-capitan-storm-clouds",
+        "plate": "left"
+      },
+      {
+        "photo": "el-capitan-star-trails",
+        "plate": "full"
+      }
+    ]
+  },
+  {
+    "slug": "greece",
+    "number": 2,
+    "title": "Greece",
+    "kind": "place",
+    "place": "Delphi and Santorini",
+    "dates": "",
+    "blurb": "The sanctuary at Delphi, then the caldera towns of Santorini.",
+    "cover": "temple-of-apollo-columns",
+    "plates": [
+      {
+        "photo": "temple-of-apollo-columns",
+        "plate": "wide"
+      },
+      {
+        "photo": [
+          "treasury-of-the-athenians",
+          "treasury-from-above"
+        ],
+        "plate": "pair"
+      },
+      {
+        "photo": "temple-terrace-under-cliffs",
+        "plate": "right"
+      },
+      {
+        "photo": "blue-domes-oia",
+        "plate": "wide"
+      },
+      {
+        "photo": "orange-church-with-blue-dome",
+        "plate": "left"
+      },
+      {
+        "photo": "oia-on-the-cliff-edge",
+        "plate": "full"
+      },
+      {
+        "photo": "stairway-toward-the-sea",
+        "plate": "wide"
+      },
+      {
+        "photo": "caldera-cliffs-and-town",
+        "plate": "left"
+      }
+    ]
+  },
+  {
+    "slug": "hawaii",
+    "number": 3,
+    "title": "Hawaiʻi",
+    "kind": "place",
+    "place": "Hawaiʻi",
+    "dates": "",
+    "blurb": "An evening luau: the procession at sunset and hula under the palms.",
+    "cover": "tree-row-in-evening-light",
+    "plates": [
+      {
+        "photo": "tree-row-in-evening-light",
+        "plate": "wide"
+      },
+      {
+        "photo": [
+          "carrying-the-tray",
+          "hula-at-sunset"
+        ],
+        "plate": "pair"
+      },
+      {
+        "photo": "procession-with-leis",
+        "plate": "right"
+      }
+    ]
+  },
+  {
+    "slug": "climbing",
+    "number": 4,
+    "title": "Climbing",
+    "kind": "subject",
+    "place": "California",
+    "dates": "",
+    "blurb": "Days at the boulders and the walls, and one long exposure after dark lit with a handheld light.",
+    "cover": "bouldering-with-a-spotter",
+    "plates": [
+      {
+        "photo": "bouldering-with-a-spotter",
+        "plate": "center"
+      },
+      {
+        "photo": "climber-from-above",
+        "plate": "left"
+      },
+      {
+        "photo": "climber-on-granite",
+        "plate": "full"
+      },
+      {
+        "photo": "facing-a-snowy-peak",
+        "plate": "center"
+      },
+      {
+        "photo": "light-trail-night-boulder",
+        "plate": "left"
+      }
+    ]
+  }
+]

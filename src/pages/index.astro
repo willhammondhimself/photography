@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import PlateSequence from '../components/PlateSequence.astro';
+import Photo from '../components/Photo.astro';
+import { indexPlates, photos, series } from '../lib/photos';
+import { countWord, pad } from '../lib/format';
+import { typeset } from '../lib/text';
+import { WIDTHS } from '../lib/images';
+import { url } from '../lib/url';
+
+const n = series.length;
+---
+
+<Base page="index">
+  <h1 class="sr-only">Will Hammond, photography</h1>
+  <PlateSequence plates={indexPlates} opener />
+  {/* End card: the last frame of the edit points on to the series, cover by cover. */}
+  <div class="edit-end grid">
+    <p class="edit-end-line"><span class="edit-end-n">End</span>
+      That's the edit. {countWord(n)} {n === 1 ? 'series is' : 'series are'} in <a href={url('series/')}>Series</a>, and all {photos.length} photographs are in the <a href={url('archive/')}>Archive</a>.
+    </p>
+    <ol class="edit-end-series" aria-label="Series">
+      {
+        series.map((s) => (
+          <li style={`--ar:${s.cover.ar.toFixed(5)}`}>
+            <a class="ees-link" href={url(`series/${s.slug}/`)}>
+              <Photo photo={s.cover} widths={WIDTHS.preview} sizes="(min-width: 1024px) 25vw, 50vw" decorative />
+              <span class="cap">
+                <span class="cap-n">{pad(s.number)}</span>
+                <span class="cap-t"><Fragment set:html={typeset(s.title)} /></span>
+                <span class="cap-p num">{s.photos.length}</span>
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</Base>

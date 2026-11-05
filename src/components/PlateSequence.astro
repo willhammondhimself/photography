@@ -1,0 +1,37 @@
+---
+import Plate from './Plate.astro';
+import PlatePair from './PlatePair.astro';
+import type { Plate as PlateT } from '../lib/photos';
+import { pad } from '../lib/format';
+
+interface Props {
+  plates: PlateT[];
+  /** Series number for "02.07" numbering; omit on the Index. */
+  seriesNumber?: number;
+  /** Treat the first plate as the Index opener. */
+  opener?: boolean;
+}
+
+const { plates, seriesNumber, opener = false } = Astro.props;
+const total = plates.reduce((n, p) => n + p.photos.length, 0);
+let i = 0;
+const num = () => {
+  i += 1;
+  return seriesNumber === undefined ? pad(i, total) : `${pad(seriesNumber)}.${pad(i, total)}`;
+};
+// Index captions carry the edit's total ("07 / 18"); it replaces the fixed counter chip.
+const tot = seriesNumber === undefined ? pad(total) : undefined;
+const numbered = plates.map((p) => ({ ...p, n: p.photos.map(() => num()) }));
+---
+
+<div class:list={['plates', seriesNumber === undefined ? 'index-plates' : 'series-plates']} data-total={total}>
+  {
+    numbered.map((p, k) =>
+      p.plate === 'pair' ? (
+        <PlatePair photos={p.photos} n={[p.n[0], p.n[1]]} tot={tot} eager={k < 2} />
+      ) : (
+        <Plate photo={p.photos[0]} kind={p.plate} n={p.n[0]} tot={tot} opener={opener && k === 0} eager={k < 2} />
+      ),
+    )
+  }
+</div>

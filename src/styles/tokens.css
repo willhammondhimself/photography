@@ -1,0 +1,81 @@
+:root {
+  /* Surfaces */
+  --ink-0: #121110;  /* canvas. Warm near-black. Not #000, not Tailwind gray/neutral/zinc/stone-900 */
+  --ink-1: #1B1A18;  /* chips, list-view row hover, placeholder fallback */
+  --line:  #2E2C29;  /* hairlines: sticky filter bar edge, list/table rules. Decorative only */
+
+  /* Text */
+  --fg:    #ECE9E3;  /* primary: titles, active items, values */
+  --fg-2:  #B4AEA5;  /* secondary: nav items, place/date, labels (was #A39E96; council round 5) */
+  --fg-3:  #968F87;  /* tertiary: counts, plate numbers, inactive facets, footer (was #8A857E) */
+
+  /* The one accent: "AF green", the viewfinder focus-confirm signal */
+  --accent: #9ED36A;
+
+  color-scheme: dark;
+}
+
+:root {
+  --step--1: clamp(0.75rem, 0.72rem + 0.12vw, 0.8125rem);  /* 12→13px  captions, metadata, counts, footer */
+  --step-0:  clamp(0.875rem, 0.85rem + 0.12vw, 0.9375rem); /* 14→15px  UI: header, nav, filters, viewer band */
+  --step-1:  clamp(1.0625rem, 1rem + 0.3vw, 1.25rem);       /* 17→20px  reading: series blurb, Info text */
+  --step-3:  clamp(2.5rem, 1.6rem + 4vw, 5.5rem);           /* 40→88px  display: series titles, 404 */
+}
+
+:root {
+  --margin: clamp(1rem, 3vw, 3rem);       /* page side margin: 16px → 48px */
+  --gutter: clamp(0.75rem, 1.5vw, 1.5rem);/* plate grid column gap */
+  --sheet-gap: 0.5rem;                    /* Archive gutter: 8px (was 4px; council round 3), 4px on phones */
+  --rest: clamp(3rem, 8vh, 6rem);         /* vertical rest between plates (was 4–10rem / 12vh; council round 5) */
+  --header-h: 3.5rem;                     /* 56px, desktop header row */
+  --max: 110rem;                          /* 1760px max content width; Archive ignores it */
+  /* spacing scale, 4px base */
+  --s-1: .25rem; --s-2: .5rem; --s-3: .75rem; --s-4: 1rem; --s-6: 1.5rem;
+  --s-8: 2rem; --s-12: 3rem; --s-16: 4rem; --s-24: 6rem;
+  --radius: 0;                            /* everywhere. Photos, chips, inputs, focus rings */
+  --header-h-sm: 5.5rem;                  /* 88px, the two-row phone header (44 + 44) */
+  /* Tallest a plate may be. On tablets and up it stays below the Viewer's photo height
+     (100svh - header - one-line band), so opening a photo only ever enlarges it. */
+  --plate-h: 88svh;
+}
+@media (min-width: 640px) { :root { --plate-h: calc(100svh - var(--header-h) - 6rem); } }
+/* Phones: one screen per photo, so the rest between plates is a beat, not a pause. */
+@media (max-width: 639px) { :root { --rest: 3rem; --sheet-gap: 0.25rem; } }
+
+:root {
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);   /* expo-out: arrivals, settles, reflow */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);  /* symmetric: rubber-band return */
+  --ease-exit:   cubic-bezier(0.4, 0, 1, 1);      /* departures */
+  /* damped spring, ζ≈0.88, ~0.3% overshoot (imperceptible), settles ~590ms. Morph only. */
+  --ease-spring: linear(0, 0.0533, 0.1726, 0.3156, 0.4571, 0.5844, 0.6918, 0.7784, 0.8455,
+    0.896, 0.9327, 0.9586, 0.9764, 0.988, 0.9953, 0.9997, 1.002, 1.003, 1.0033, 1.0031,
+    1.0027, 1.0022, 1.0018, 1.0014, 1);
+
+  --dur-hover: 120ms;   /* color/opacity of text, chips */
+  --dur-ui:    200ms;   /* list falloff, tile enter in filter */
+  --dur-dim:   280ms;   /* sibling dim in, preview crossfade */
+  --dur-exit:  200ms;   /* page out */
+  --dur-page:  320ms;   /* page in */
+  --dur-filter:420ms;   /* tile reflow on filter */
+  --dur-marker:420ms;   /* accent marker glide */
+  --dur-img:   500ms;   /* image settle after decode */
+  --dur-morph: 340ms;   /* thumbnail ↔ viewer, --ease-out, no spring tail (was 420ms spring; council round 9) */
+  /* Viewer next/prev: the two photos move in lockstep, like a strip of film: same direction,
+     same distance (--slide-d, one screen width plus a gutter, set by motion.ts), same timing.
+     Both fully opaque the whole way; the outgoing one leaves the screen exactly as the incoming
+     one lands, so nothing parks at an edge. */
+  --dur-slide:     220ms;   /* was 320ms quint-out, whose tail read as a slow drift (council round 12) */
+  --dur-slide-mid: 70ms;    /* caption and counter swap here, in one cut */
+  --slide-d:       100vw;   /* travel for both photos; motion.ts sets it per slide */
+  --ease-slide:    cubic-bezier(0.2, 0.7, 0.2, 1);  /* firm ease-out: lands without a settling drift */
+  --dur-swap-out:  120ms;   /* root text/chrome out before the new page fades in */
+  --dur-morph-clear: 80ms;  /* closing morph: the viewer band is gone before the photo reaches the grid */
+  --dur-morph-land: 120ms;  /* opening morph: the band starts once the photo is ~90% of the way there */
+  --dur-morph-band: 120ms;  /* opening morph: the band's fade, fully up by 240ms, as the photo lands */
+  /* Archive filter (FLIP, archive.ts), in order and never overlapping: leavers fade out in
+     place in the old layout, then the new layout is committed and the survivors glide to their
+     new slots, then arrivals fade up in theirs. Two layouts are never on screen at once. */
+  --dur-tile-out:  120ms;   /* beat 1: non-matching tiles fade out where they are */
+  --dur-tile-move: 300ms;   /* beat 2: survivors glide (translate + scale) to their new slots */
+  --dur-tile-in:   160ms;   /* beat 3: arrivals fade up in their own slots, from 40% of beat 2 */
+}

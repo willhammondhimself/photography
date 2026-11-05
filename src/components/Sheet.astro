@@ -1,0 +1,18 @@
+---
+import Tile from './Tile.astro';
+import type { Photo } from '../lib/photos';
+
+interface Props { photos: Photo[]; category?: string }
+const { photos, category } = Astro.props;
+let shown = 0;
+---
+
+<div class="sheet" data-sheet>
+  {
+    photos.map((p) => {
+      const hidden = !!category && p.category !== category;
+      if (!hidden) shown++;
+      return <Tile photo={p} hidden={hidden} eager={!hidden && shown <= 8} />;
+    })
+  }
+</div>

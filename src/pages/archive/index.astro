@@ -1,0 +1,9 @@
+---
+import Base from '../../layouts/Base.astro';
+import Archive from '../../components/Archive.astro';
+import { archiveOrder } from '../../lib/photos';
+---
+
+<Base title="Archive" page="archive" ogPhoto={archiveOrder[0]}>
+  <Archive />
+</Base>

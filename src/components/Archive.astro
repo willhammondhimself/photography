@@ -1,0 +1,22 @@
+---
+import FilterBar from './FilterBar.astro';
+import Sheet from './Sheet.astro';
+import ListView from './ListView.astro';
+import { archiveOrder } from '../lib/archive';
+import { CATEGORY_LABELS, type Category } from '../lib/photos';
+import { url } from '../lib/url';
+
+interface Props { category?: Category }
+const { category } = Astro.props;
+---
+
+<div class="archive" data-archive data-base={url('archive/')} data-category={category ?? 'all'}>
+  <h1 class="sr-only">{category ? `Archive: ${CATEGORY_LABELS[category]}` : 'Archive'}</h1>
+  <FilterBar category={category} />
+  <Sheet photos={archiveOrder} category={category} />
+  <ListView photos={archiveOrder} category={category} />
+  <p class="empty" data-empty hidden>
+    <span data-empty-text></span>
+    <a href={url('archive/')} data-astro-reload data-clear>Clear filters</a>
+  </p>
+</div>

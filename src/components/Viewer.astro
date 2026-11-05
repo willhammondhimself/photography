@@ -1,0 +1,108 @@
+---
+import { typeset } from '../lib/text';
+import { getImage } from 'astro:assets';
+import Photo from './Photo.astro';
+import { seriesSequence, type Photo as P } from '../lib/photos';
+import { WIDTHS, heroSizes, widthsFor } from '../lib/images';
+import { fullDate, pad } from '../lib/format';
+import { url } from '../lib/url';
+
+interface Props { photo: P }
+const { photo } = Astro.props;
+
+const seq = seriesSequence(photo);
+const prev = seq.list[seq.index - 1];
+const next = seq.list[seq.index + 1];
+const total = seq.list.length;
+const closeHref = url(photo.series ? seq.context.href : 'archive/');
+
+// Same transform as the hero <Picture>, so the preload hits the exact URLs.
+const avif = async (p: P) =>
+  (await getImage({ src: p.image, width: p.width, height: p.height, widths: widthsFor(p, WIDTHS.hero), format: 'avif', quality: 80 })).srcSet
+    .attribute;
+const prevSrcset = prev ? await avif(prev) : '';
+const nextSrcset = next ? await avif(next) : '';
+
+const place = [photo.place, fullDate(photo.date)].filter(Boolean).join(', ');
+const exif = [
+  ['Camera', photo.exif.camera],
+  ['Lens', photo.exif.lens],
+  ['Focal length', photo.exif.focal],
+  ['Aperture', photo.exif.aperture],
+  ['Shutter', photo.exif.shutter],
+  ['ISO', photo.exif.iso?.replace(/^ISO\s*/, '')],
+].filter((x): x is [string, string] => !!x[1]);
+const counter = { cur: pad(seq.index + 1, total), tot: pad(total) };
+
+---
+
+<div class="viewer" data-viewer>
+  {/* Phones: Close sits top right, on the header's row, opposite the name. */}
+  <a class="b-close-top sm-only" href={closeHref} data-close>Close</a>
+  <div class="stage" data-stage style={`--ar:${photo.ar.toFixed(5)}`}>
+    <Photo photo={photo} widths={WIDTHS.hero} sizes={heroSizes(photo)} lqip priority hero />
+    {prev && <a class="zone zone--prev" href={url(`photo/${prev.id}/`)} data-nav-link="prev" tabindex="-1" aria-hidden="true" data-astro-history="replace" data-astro-prefetch="load" />}
+    {next && <a class="zone zone--next" href={url(`photo/${next.id}/`)} data-nav-link="next" tabindex="-1" aria-hidden="true" data-astro-history="replace" data-astro-prefetch="load" />}
+  </div>
+
+  <div class="band">
+    <div class="b-title">
+      <h1 class="b-t"><Fragment set:html={typeset(photo.title)} /></h1>
+      {place && <p class="b-p"><Fragment set:html={typeset(place)} /></p>}
+    </div>
+
+    {
+      exif.length > 0 && (
+        <dl class="exif lg-only">
+          {exif.map(([k, v]) => (
+            <div class="ex">
+              <dt>{k}</dt>
+              <dd class="num">{v}</dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+    {
+      exif.length > 0 && (
+        <details class="exif-details sm-only">
+          <summary>Details</summary>
+          <dl class="exif-sm">
+            {exif.map(([k, v]) => (
+              <div class="ex">
+                <dt>{k}</dt>
+                <dd class="num">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </details>
+      )
+    }
+
+    <div class="b-nav">
+      <p class="b-ctx lg-only">
+        <span class="b-counter num"><span class="cur">{counter.cur}</span><span class="tot"> / {counter.tot}</span></span>
+        <a href={url(seq.context.href)}><Fragment set:html={typeset(seq.context.title)} /></a>
+      </p>
+      <p class="b-links">
+        {
+          prev ? (
+            <a href={url(`photo/${prev.id}/`)} rel="prev" aria-label="Previous photo" data-nav-link="prev" data-astro-history="replace" data-astro-prefetch="load" data-preload={prevSrcset} data-preload-sizes={heroSizes(prev)}>Previous</a>
+          ) : (
+            <span class="is-off">Previous</span>
+          )
+        }
+        <span class="b-counter num sm-only"><span class="cur">{counter.cur}</span><span class="tot"> / {counter.tot}</span></span>
+        {
+          next ? (
+            <a href={url(`photo/${next.id}/`)} rel="next" aria-label="Next photo" data-nav-link="next" data-astro-history="replace" data-astro-prefetch="load" data-preload={nextSrcset} data-preload-sizes={heroSizes(next)}>Next</a>
+          ) : (
+            <span class="is-off">Next</span>
+          )
+        }
+        <a class="lg-only" href={closeHref} data-close>Close</a>
+      </p>
+    </div>
+  </div>
+
+</div>

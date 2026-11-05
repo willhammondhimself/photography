@@ -1,0 +1,11 @@
+---
+import { site } from '../lib/photos';
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <span>{site.name}</span>
+  {site.instagram && <a href={`https://www.instagram.com/${site.instagram}/`} rel="me">@{site.instagram}</a>}
+  {site.email && <a href={`mailto:${site.email}`}>{site.email}</a>}
+  <span class="num">{year}</span>
+</footer>

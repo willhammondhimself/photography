@@ -1,0 +1,918 @@
+/* ---------------------------------------------------------------- reset */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body, h1, h2, h3, p, figure, figcaption, ol, ul, li, dl, dt, dd, table { margin: 0; padding: 0; }
+ol, ul { list-style: none; }
+img, picture { display: block; max-width: 100%; }
+table { border-collapse: collapse; border-spacing: 0; }
+[hidden] { display: none !important; }
+
+html {
+  background: var(--ink-0);
+  color: var(--fg);
+  font-family: var(--font-sans), "Schibsted Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 100%;
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+body {
+  font-size: var(--step-0);
+  line-height: 1.35;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+main { flex: 1 0 auto; outline: none; }
+h1, h2, h3 { font: inherit; }
+
+::selection { background: var(--fg); color: var(--ink-0); }
+
+a { color: inherit; text-decoration: none; }
+a, summary { -webkit-tap-highlight-color: transparent; }
+
+.num { font-variant-numeric: tabular-nums lining-nums; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ---------------------------------------------------------------- focus */
+
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; border-radius: 0; }
+a[data-photo] { position: relative; display: block; }
+a[data-photo]:focus-visible { outline: none; }
+a[data-photo]:focus-visible::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  outline: 2px solid var(--fg); outline-offset: -2px; box-shadow: inset 0 0 0 4px var(--ink-0);
+}
+
+.skip {
+  position: absolute; left: var(--s-2); top: var(--s-2); z-index: 100;
+  background: var(--ink-1); color: var(--fg); padding: var(--s-2) var(--s-3);
+  transform: translateY(-200%);
+}
+.skip:focus-visible { transform: none; }
+
+/* ------------------------------------------------------------- columns */
+
+.grid {
+  --cols: 4;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  column-gap: var(--gutter);
+  padding-inline: var(--margin);
+  width: 100%;
+  max-width: var(--max);
+  margin-inline: auto;
+}
+@media (min-width: 640px) { .grid { --cols: 8; } }
+@media (min-width: 1024px) { .grid { --cols: 12; } }
+
+/* Text links and controls: --fg-2 to --fg. */
+.link-quiet, .nav-item, .opt, .site-footer a, .b-links a, .b-ctx a, .all-series, .nf-links a, .info-dl a, .empty a {
+  transition: color 100ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .nav-item:hover, .opt:hover, .site-footer a:hover, .b-links a:hover, .b-ctx a:hover,
+  .all-series:hover, .nf-links a:hover, .info-dl a:hover, .empty a:hover {
+    color: var(--fg); transition-duration: var(--dur-hover);
+  }
+}
+.nav-item:focus-visible, .opt:focus-visible, .site-footer a:focus-visible, .b-links a:focus-visible,
+.b-ctx a:focus-visible, .all-series:focus-visible, .nf-links a:focus-visible { color: var(--fg); }
+
+/* The accent square. Current state only. */
+.mk {
+  position: absolute;
+  width: 6px; height: 6px;
+  background: var(--accent);
+  right: calc(100% + 0.5rem);
+  top: calc(50% + 0.04em);
+  translate: 0 -50%;
+}
+
+/* --------------------------------------------------------------- header */
+
+.site-header {
+  view-transition-name: site-header;
+  background: var(--ink-0);
+  padding-inline: var(--margin);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--header-h);
+  font-size: var(--step-0);
+  line-height: 1.35;
+  position: relative;
+  z-index: 20;
+}
+.wordmark { font-weight: 500; color: var(--fg); }
+.nav { display: flex; gap: 1.5rem; }
+.nav-item { position: relative; color: var(--fg-2); display: inline-flex; align-items: baseline; }
+.nav-item.is-active { color: var(--fg); }
+.nav-item .count { color: var(--fg-3); margin-left: 0.35em; font-variant-numeric: tabular-nums lining-nums; }
+.nav-marker { view-transition-name: nav-marker; }
+
+@media (max-width: 639px) {
+  .site-header { flex-direction: column; align-items: stretch; height: auto; }
+  .wordmark { height: 44px; display: flex; align-items: center; align-self: flex-start; }
+  /* Left-aligned with fixed gaps (not spread edge to edge). Every label is indented by the
+     marker's width, so the active square sits inside the 16px margin instead of at the
+     screen edge. */
+  .nav { height: 44px; padding-bottom: 4px; justify-content: flex-start; gap: 0 1.25rem; }
+  .nav-item { height: 40px; min-width: 44px; align-items: center; padding-left: calc(6px + 0.5rem); }
+  .nav-item .mk { right: auto; left: 0; }
+  /* Phones draw overlay scrollbars; keep captures at the true 390px layout width. */
+  html { scrollbar-width: none; }
+}
+/* The root scrollbar is drawn in the ground's own tones, never a light track beside the page.
+   Its gutter is always reserved, so the right-aligned nav sits at the same x on pages that
+   scroll (Index, Archive) and pages that do not (Viewer, short Series list). */
+html { scrollbar-color: color-mix(in oklab, var(--fg-3) 45%, var(--ink-0)) var(--ink-0); scrollbar-gutter: stable; }
+
+/* --------------------------------------------------------------- footer */
+
+.site-footer {
+  display: flex; flex-wrap: wrap; column-gap: 2ch; row-gap: var(--s-1);
+  padding: var(--s-12) var(--margin) var(--s-8);
+  font-size: var(--step--1); line-height: 1.35; letter-spacing: 0.01em;
+  color: var(--fg-3);
+}
+.site-footer a { color: var(--fg-2); }
+
+/* ------------------------------------------------------- photo frames */
+
+/* <picture> is the frame: native aspect, the photo's own color, optional LQIP. */
+.frame {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--w) / var(--h);
+  overflow: clip;
+  background-color: color-mix(in oklab, var(--dom) 40%, var(--ink-0));
+}
+.frame.has-lqip::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: var(--lqip) center / 100% 100% no-repeat;
+  filter: blur(20px);
+  transform: scale(1.1);
+}
+.frame img { position: relative; width: 100%; height: 100%; }
+/* While its photo morphs away (or lands), the frame drops its placeholder so the page
+   snapshot never shows a blurred ghost where the photo was. Set by motion.ts. */
+.frame.is-lifted, .tile.is-lifted { background: none; }
+.frame.is-lifted::before { content: none; }
+
+/* --------------------------------------------------------------- plates */
+
+.plates { display: flow-root; }
+.plate { margin-block: var(--rest); }
+.plate--full { margin-block: calc(var(--rest) * 1.5); }
+.plate.is-opener { margin-top: 0; }
+.plates > .plate:first-child { margin-top: 0; }
+.series-plates > .plate:last-child, .index-plates > .plate:last-child { margin-bottom: 0; }
+
+.plate:not(.plate--full) {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr));
+  column-gap: var(--gutter);
+  padding-inline: var(--margin);
+  max-width: var(--max);
+  margin-inline: auto;
+  --cols: 4;
+}
+@media (min-width: 640px) { .plate:not(.plate--full) { --cols: 8; } }
+@media (min-width: 1024px) { .plate:not(.plate--full) { --cols: 12; } }
+
+.fig {
+  /* fills its span unless that would pass --plate-h tall */
+  width: min(100%, calc(var(--plate-h) * var(--ar)));
+  min-width: 0;
+  grid-column: 1 / -1;
+}
+.plate--full .fig { width: 100%; }
+.plate--full .cap { padding-inline: var(--margin); }
+
+/* Index opener: presented like every other plate. Native aspect, contained in the first
+   screen (viewport minus header, with room for its caption), centered, caption below. */
+.plate--opener .fig {
+  justify-self: center;
+  width: min(100%, calc((100svh - var(--header-h) - 3.25rem) * var(--ar)));
+}
+/* One measure. On tablets and up the opener, every wide plate and every pair share the same
+   two edges: the cols 2-11 span, or less when a 3:2 frame that wide would pass --plate-h. A
+   landscape fills the measure; a pair of portraits fills it whenever the pair is wide enough
+   (the edit pairs frames so it is). Only full plates (bleed) and center plates (rest space
+   around a portrait) leave it, on purpose. */
+.plates { --measure: 100%; }
+/* Tablets and up: the opener owns the first screen. It is as large as the screen allows (cols
+   1-12, height capped so its caption still fits above the fold), and its plate is a screen tall,
+   so the site opens on one complete photograph with nothing of the next one peeking in. Plate 02
+   and on keep the shared measure; they are never on screen together with the opener. */
+@media (min-width: 640px) {
+  .plate.is-opener { min-height: calc(100svh - var(--header-h)); margin-bottom: 0; }
+}
+@media (min-width: 640px) {
+  .plate--opener .fig, .plate--wide .fig, .plate--pair .pair {
+    --measure: min(100%, calc(var(--plate-h) * 1.5));
+  }
+  .plate--wide .fig { width: min(var(--measure), calc(var(--plate-h) * var(--ar))); }
+  .plate--opener .fig { grid-column: 1 / -1; }
+}
+@media (min-width: 1024px) {
+  .plate--pair .pair { grid-column: 2 / 12; }
+}
+@media (max-width: 639px) {
+  .plate--opener .fig { width: min(100%, calc((100svh - var(--header-h-sm) - 5rem) * var(--ar))); }
+  /* Phones: "full" plates bleed edge to edge as on desktop (caption inside the margin), so the
+     phone edit keeps the Index's change of scale between margin plates and bleeds. */
+  .plate--full { margin-block: var(--rest); }
+}
+
+@media (min-width: 640px) {
+  .plate--wide .fig   { grid-column: 1 / 9; justify-self: center; }
+  .plate--left .fig   { grid-column: 1 / 7; justify-self: start; }
+  .plate--right .fig  { grid-column: 3 / 9; justify-self: end; }
+  .plate--center .fig { grid-column: 2 / 8; justify-self: center; }
+}
+@media (min-width: 1024px) {
+  .plate--wide .fig   { grid-column: 2 / 12; }
+  .plate--left .fig   { grid-column: 1 / 8; }
+  .plate--right .fig  { grid-column: 6 / 13; }
+  .plate--center .fig { grid-column: 4 / 10; }
+  /* Offset plates carry their caption in the open columns beside the photo, on its bottom
+     edge, so the empty half of the spread is part of the layout rather than left over.
+     Number, title and place stack; the caption sits flush against the photo's edge. */
+  .plate--left .fig, .plate--right .fig { position: relative; }
+  .plate--left .fig > .cap, .plate--right .fig > .cap {
+    position: absolute; bottom: 0; margin: 0;
+    width: 16rem; grid-template-columns: minmax(0, 1fr); row-gap: 0.125rem;
+  }
+  .plate--left .fig > .cap  { left: calc(100% + var(--gutter) * 2); }
+  .plate--right .fig > .cap { right: calc(100% + var(--gutter) * 2); text-align: right; }
+  .plate--left .cap-p, .plate--right .cap-p { grid-column: 1; }
+  .plate--left .cap-n, .plate--right .cap-n { margin-bottom: var(--s-2); }
+}
+@media (max-width: 639px) {
+  .plate--right .fig { justify-self: end; }
+  .plate--center .fig, .plate--wide .fig { justify-self: center; }
+}
+
+.pair {
+  grid-column: 1 / -1;
+  justify-self: center;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gutter);
+  width: min(var(--measure, 100%), calc(var(--plate-h) * var(--sum) + var(--gutter)));
+}
+.pair .fig { width: auto; flex: var(--ar) 1 0%; }
+/* Phones: no 2-up. Each photograph of a pair gets the full width at its own aspect, with its
+   own caption; two portraits side by side were about 170px wide each. */
+@media (max-width: 639px) {
+  .pair { flex-direction: column; width: 100%; gap: var(--rest); }
+  .pair .fig { width: min(100%, calc(var(--plate-h) * var(--ar))); flex: none; align-self: center; }
+}
+
+/* Captions: number, title, place and date. Aligned to the image's left edge. */
+.cap {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  column-gap: 1.5ch;
+  margin-top: var(--s-3);
+  font-size: var(--step--1);
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+/* Proportional lining figures: the caption number stands alone, so it needs no column
+   alignment, and Schibsted's tabular "1" has a slab foot that reads as monospace ("01.01"). */
+.cap-n { color: var(--fg-3); white-space: nowrap; font-variant-numeric: lining-nums proportional-nums; }
+.cap-t { color: var(--fg); text-decoration: underline 1px transparent; text-underline-offset: 0.25em; transition: text-decoration-color var(--dur-hover) var(--ease-out); }
+.cap-p { color: var(--fg-2); }
+.pair .cap, .plate--center .cap, .plate--left .cap, .plate--right .cap { grid-template-columns: auto minmax(0, auto) minmax(0, 1fr); }
+@media (max-width: 639px) {
+  .cap { grid-template-columns: auto minmax(0, 1fr); }
+  .cap-p { grid-column: 2; }
+}
+@media (max-width: 1023px) {
+  .pair .cap { grid-template-columns: auto minmax(0, 1fr); }
+  .pair .cap-p { grid-column: 2; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .plate-link:hover + .cap .cap-t { text-decoration-color: var(--fg-3); }
+}
+.plate-link:focus-visible + .cap .cap-t { text-decoration-color: var(--fg-3); }
+
+/* End of the edit */
+.edit-end { margin-top: calc(var(--rest) * 1.5); }
+.edit-end-line {
+  grid-column: 1 / -1;
+  font-size: var(--step-1); line-height: 1.5; letter-spacing: -0.005em;
+  color: var(--fg-2); max-width: 42ch;
+}
+/* "End" sits where a plate's number sits, in the number's tone, so the line reads as the
+   sequence's last frame; on lg it starts on the measure's left edge (col 2), like the plates. */
+.edit-end-n { display: block; margin-bottom: var(--s-2); font-size: var(--step--1); line-height: 1.35; letter-spacing: 0.01em; color: var(--fg-3); }
+@media (min-width: 1024px) { .edit-end-line { grid-column: 2 / 8; } }
+/* The end card: the series covers in one justified row (native aspect, equal height, no crop),
+   each with its number, title and count, so the edit ends by pointing on to Series. */
+.edit-end-series {
+  grid-column: 1 / -1; margin-top: var(--s-8);
+  display: flex; align-items: flex-start; gap: var(--gutter);
+}
+.edit-end-series li { flex: var(--ar) 1 0%; min-width: 0; }
+/* Phones: two covers a row, equal widths, each at its own aspect. */
+@media (max-width: 639px) {
+  .edit-end-series { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--s-6); }
+}
+.ees-link { display: block; }
+.ees-link .cap { grid-template-columns: auto minmax(0, auto) minmax(0, 1fr); }
+.ees-link .cap-p { color: var(--fg-3); }
+@media (hover: hover) and (pointer: fine) {
+  .ees-link:hover .cap-t { text-decoration-color: var(--fg-3); }
+}
+.ees-link:focus-visible .cap-t { text-decoration-color: var(--fg-3); }
+@media (min-width: 1024px) { .edit-end-series { grid-column: 2 / 12; } }
+@media (max-width: 639px) { .ees-link .cap-p { grid-column: auto; } }
+.edit-end-line a, .info-text a {
+  color: var(--fg);
+  text-decoration: underline 1px var(--fg-3);
+  text-underline-offset: 0.2em;
+}
+
+/* ---------------------------------------------------------- series list */
+
+/* The list and the preview are one block, centered in the first screen (above the footer).
+   The place and count sit on the title's baseline, right after it. */
+.series-index { display: none; padding-block: var(--s-8); }
+.series-list { grid-column: 1 / 7; align-self: start; }
+.series-row {
+  display: grid;
+  grid-template-columns: 2.75rem auto minmax(0, 1fr);
+  align-items: last baseline;
+  column-gap: var(--s-4);
+  padding-block: var(--s-6);
+}
+.series-row .sr-m { margin-left: var(--s-2); }
+.sr-n {
+  align-self: start;
+  font-size: var(--step-0); line-height: 1.35;
+  color: var(--fg-3);
+  /* sit on the title's cap height */
+  padding-top: calc(var(--step-3) * 0.16);
+}
+.sr-t, .sb-t, .sh-t, .nf-code {
+  font-size: var(--step-3); line-height: 0.98; letter-spacing: -0.03em;
+}
+.sr-t {
+  color: var(--fg);
+  /* The hovered or focused title is underlined like a plate caption, so the rows read as links. */
+  text-decoration: underline 0.03em transparent; text-underline-offset: 0.1em;
+  transition: color var(--dur-ui) var(--ease-out), text-decoration-color var(--dur-hover) var(--ease-out);
+}
+.sr-m, .sb-m, .sh-m { display: flex; flex-wrap: wrap; column-gap: 2ch; color: var(--fg-2); }
+.sr-m { font-size: var(--step-0); white-space: nowrap; justify-self: start; column-gap: 1.5ch; }
+.sr-c { color: var(--fg-3); }
+/* Group labels ("Places", "Subject"), set on the title's left edge like the Archive's group
+   labels. The second group starts after an extra rest. */
+.sr-g { font-size: var(--step--1); line-height: 1.35; letter-spacing: 0.01em; color: var(--fg-2); }
+.series-list .sr-g { padding-left: calc(2.75rem + var(--s-4)); margin-bottom: calc(-1 * var(--s-3)); }
+.series-list .sr-new-group { margin-top: var(--s-8); }
+.series-blocks .sr-g { margin-bottom: var(--s-3); }
+
+@media (hover: hover) and (pointer: fine) {
+  .series-list:has(.series-row:hover) .series-row:not(:hover) .sr-t { color: var(--fg-3); }
+  .series-row:hover .sr-t { text-decoration-color: var(--fg-3); }
+}
+.series-list:has(.series-row:focus-visible) .series-row:not(:focus-visible) .sr-t { color: var(--fg-3); }
+.series-row:focus-visible .sr-t { text-decoration-color: var(--fg-3); }
+
+.series-preview {
+  grid-column: 7 / 13;
+  position: sticky; top: var(--s-8);
+  display: grid;
+}
+.pv {
+  grid-area: 1 / 1;
+  justify-self: end;
+  /* capped so a portrait cover and its caption still fit the first screen */
+  width: min(100%, calc(62svh * var(--ar)));
+  opacity: 0;
+  transition: opacity var(--dur-dim) var(--ease-out);
+}
+.pv.is-active { opacity: 1; }
+.pv-cap { grid-template-columns: auto minmax(0, 1fr); }
+.pv-blurb { margin-top: var(--s-6); max-width: 38ch; color: var(--fg-2); font-size: var(--step-0); line-height: 1.5; }
+
+.series-blocks { display: grid; row-gap: var(--s-16); padding: var(--s-8) var(--margin) 0; }
+.sb-link { display: grid; row-gap: var(--s-3); }
+.sb-img { display: block; width: min(100%, calc(75svh * var(--ar))); }
+.sb-title { display: flex; align-items: flex-start; column-gap: var(--s-3); color: var(--fg); margin-top: var(--s-2); }
+.sb-title .sr-n { padding-top: calc(var(--step-3) * 0.14); }
+.sb-m { font-size: var(--step--1); letter-spacing: 0.01em; }
+@media (min-width: 1024px) {
+  /* List and preview are both centered on the first screen's midline. The preview stack is
+     as tall as its tallest cover, so the shown cover centers within it too: a landscape cover
+     no longer leaves the lower part of the screen empty. */
+  .series-index { display: grid; align-items: center; align-content: center; min-height: calc(100svh - var(--header-h) - 6.25rem); }
+  .series-list { align-self: center; }
+  .series-preview { align-self: center; }
+  .pv { align-self: center; }
+  .series-blocks { display: none; }
+}
+
+/* ---------------------------------------------------------- series page */
+
+.series-head { padding-top: var(--s-12); margin-bottom: var(--s-24); row-gap: var(--s-6); }
+.sh-block { grid-column: 1 / -1; display: grid; row-gap: var(--s-3); }
+.sh-n { color: var(--fg-3); }
+.sh-t { color: var(--fg); }
+.sh-m { font-size: var(--step-0); }
+.sh-blurb {
+  grid-column: 1 / -1;
+  font-size: var(--step-1); line-height: 1.5; letter-spacing: -0.005em;
+  color: var(--fg); max-width: 38ch;
+}
+@media (min-width: 1024px) {
+  /* Title block left, blurb in the open right half on the meta line's baseline, so the
+     header is one band and the first photo starts in the first screen (~y 300 at 900px). */
+  .series-head { padding-top: var(--s-8); margin-bottom: var(--s-12); align-items: end; }
+  .sh-block { grid-column: 1 / 8; }
+  .sh-blurb { grid-column: 8 / 13; grid-row: 1; justify-self: start; }
+}
+
+.series-end { margin-top: calc(var(--rest) * 1.5); align-items: end; row-gap: var(--s-6); }
+.next-series { grid-column: 1 / -1; display: grid; row-gap: var(--s-3); }
+.ns-img { display: block; width: min(100%, calc(60svh * var(--ar))); }
+.ns-cap { display: flex; column-gap: 1.5ch; font-size: var(--step-0); }
+.ns-label { color: var(--fg-2); }
+.ns-n { color: var(--fg-3); }
+.ns-t { color: var(--fg); text-decoration: underline 1px transparent; text-underline-offset: 0.25em; transition: text-decoration-color var(--dur-hover) var(--ease-out); }
+.all-series { grid-column: 1 / -1; color: var(--fg-2); font-size: var(--step-0); justify-self: start; }
+@media (hover: hover) and (pointer: fine) { .next-series:hover .ns-t { text-decoration-color: var(--fg-3); } }
+@media (min-width: 640px) {
+  .next-series { grid-column: 1 / 5; }
+  .all-series { grid-column: 5 / -1; }
+}
+@media (min-width: 1024px) {
+  .next-series { grid-column: 1 / 5; }
+  .all-series { grid-column: 5 / 9; }
+}
+
+/* -------------------------------------------------------------- archive */
+
+/* At least a screen tall, so a short filtered sheet can still sit right under the filter bar
+   without the page clamping its scroll (which would make every tile jump on filter). */
+.archive { min-height: 100svh; }
+
+.filterbar {
+  /* Its own transition layer, painted above the tiles, so gliding tiles pass under it. */
+  view-transition-name: filterbar;
+  position: sticky; top: 0; z-index: 10;
+  background: var(--ink-0);
+  border-bottom: 1px solid var(--line);
+  padding-inline: var(--margin);
+  font-size: var(--step-0); line-height: 1.35;
+  margin-bottom: var(--s-4);
+}
+.fb-row { display: flex; align-items: center; justify-content: space-between; column-gap: 2ch; }
+/* Row 1: All, then the two labeled category groups (Series, Singles); on the right, the live
+   count with the View toggle beside it. Below about 1280px the right side wraps under. */
+.fb-row1 { min-height: 44px; flex-wrap: wrap; }
+.fb-row1 > * { min-height: 44px; }
+.fb-row2 { height: 36px; }
+.fb-scroll { display: flex; align-items: center; column-gap: 4ch; min-width: 0; }
+.fb-cats { column-gap: 7ch; }
+.fb-list { display: flex; column-gap: 2ch; }
+.opt {
+  position: relative; display: inline-flex; align-items: baseline;
+  color: var(--fg-2); white-space: nowrap;
+  padding-left: calc(6px + 0.5rem);
+}
+.group--all { margin-left: calc(-6px - 0.5rem); }
+.opt .mk { right: auto; left: 0; }
+.opt.is-active { color: var(--fg); }
+.opt .c { color: var(--fg-3); margin-left: 0.35em; }
+/* Facet counts are a size down from their labels, so the bar scans as names first (two groups
+   of places and subjects), with the numbers as quiet notes beside them. */
+.facet .c { font-size: var(--step--1); letter-spacing: 0.01em; margin-left: 0.4em; }
+.facet.is-zero, .facet.is-zero .c { color: var(--fg-3); }
+.group { display: flex; align-items: baseline; column-gap: 1.5ch; }
+/* Group labels ("Series", "Singles", "View") are set at the options' size and told apart by
+   tone alone (the counts' tertiary step), with the wide gap between groups doing the grouping:
+   one size in the bar, not three. */
+/* Round 9: group labels are a step smaller than the options and each labeled group starts after
+   a hairline, so "Series" and "Singles" read as headings of two rows, not as two more filters. */
+.group-l { color: var(--fg-3); white-space: nowrap; font-size: var(--step--1); letter-spacing: 0.01em; }
+.group .fb-list { column-gap: 1.5ch; }
+.fb-cats .group .fb-list { column-gap: 2ch; }
+.fb-cats .group { column-gap: 2ch; }
+/* Tablets: the groups wrap whole onto a second 44px line instead of running off the edge. */
+@media (min-width: 640px) {
+  .fb-cats { flex-wrap: wrap; column-gap: 3.5ch; }
+  .fb-cats > .group { min-height: 44px; align-items: center; }
+  .fb-cats > .group:not(.group--all), .fb-side .group--view { position: relative; padding-left: 3.5ch; }
+  /* The hairline and the gap do the grouping; "Series" / "Singles" stay as the groups' accessible
+     names only (visible on phones, where the groups stack as rows). */
+  .fb-cats .group-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  /* With the label gone the first facet's marker indent would sit beside the hairline; take it
+     out so the hairline has the same space on both sides. */
+  .fb-cats > .group:not(.group--all) { padding-left: calc(3.5ch - 6px - 0.5rem); }
+  .fb-cats > .group:not(.group--all)::before, .fb-side .group--view::before {
+    content: ""; position: absolute; left: 0; top: 50%; height: 1.25em; translate: 0 -50%;
+    border-left: 1px solid var(--line);
+  }
+}
+.fb-side { display: flex; align-items: center; column-gap: 4ch; margin-left: auto; }
+.live { color: var(--fg-2); white-space: nowrap; }
+/* Tablets and up: the facets carry the counts ("All 32", "Greece 9"), so the separate readout
+   ("32 photographs", "9 of 32") stays only for screen readers (it is the aria-live region). */
+@media (min-width: 640px) {
+  .fb-side .live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+.mk-cat { view-transition-name: filter-marker-cat; }
+.mk-cam { view-transition-name: filter-marker-cam; }
+.mk-year { view-transition-name: filter-marker-year; }
+@media (scripting: none) { .fb-row2, .group--view { display: none; } }
+
+/* The phone disclosure button is hidden on tablets and up, and everywhere without JS. */
+.fb-toggle { display: none; }
+
+@media (max-width: 639px) {
+  /* Phones: one 44px row. "Filter  Greece  9 of 32" on the left is a disclosure that opens the
+     categories below it as wrapped rows, one group per line; the View toggle sits on the right.
+     Choosing a category closes it. Without JS there is no button and the rows simply show,
+     wrapped. Not sticky. */
+  .filterbar { position: relative; padding-inline: var(--margin); }
+  .fb-row1 { flex-wrap: wrap; align-items: center; column-gap: 2ch; }
+  .fb-cats {
+    order: 3; flex: 0 0 100%;
+    display: grid; row-gap: var(--s-1); align-items: start;
+    padding-block: var(--s-1) var(--s-3);
+  }
+  .fb-cats > .group, .fb-cats > .group--all { min-height: 0; }
+  .fb-cats .group { flex-wrap: wrap; column-gap: 1.5ch; row-gap: 0; }
+  .fb-cats .group-l { flex: 0 0 100%; padding-top: var(--s-2); }
+  .fb-cats .group--all .group-l { display: none; }
+  .fb-cats .fb-list { flex-wrap: wrap; column-gap: 3ch; row-gap: 0; }
+  .fb-cats .opt { min-height: 40px; align-items: center; }
+  .group--all { margin-left: 0; }
+  .fb-side { min-height: 44px; margin-left: auto; column-gap: 3ch; }
+  .fb-row2 { padding-inline: 0; border-top: 1px solid var(--line); height: 44px; }
+  .fb-row2 .fb-scroll { width: 100%; height: 100%; column-gap: 3ch; overflow-x: auto; scrollbar-width: none; }
+  .opt { padding-block: 0.625rem; }
+
+  @media (scripting: enabled) {
+    .fb-toggle {
+      display: inline-flex; align-items: baseline; column-gap: 1.25ch;
+      min-height: 44px; padding: 0; margin: 0;
+      background: none; border: 0; color: inherit; font: inherit; cursor: pointer;
+      align-items: center;
+    }
+    /* Set like the other controls in the bar: a secondary-tone word, the current value in the
+       primary tone, the count in the tertiary tone. */
+    .fb-toggle-l { color: var(--fg-2); }
+    .fb-toggle-v { color: var(--fg); }
+    .fb-toggle-c { color: var(--fg-3); }
+    /* The live count moves into the button; it stays in the tree for screen readers. */
+    .fb-side .live {
+      position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+    }
+    .filterbar:not(.is-open) .fb-cats { display: none; }
+    .filterbar.is-open .fb-cats { border-top: 1px solid var(--line); }
+  }
+}
+
+/* Archive filter: while tiles glide to their new slots (archive.ts), the sheet clips them, so
+   nothing passes under the filter bar or out into the margins. */
+.sheet.is-reflowing { overflow: clip; }
+
+.sheet {
+  display: flex; flex-wrap: wrap; gap: var(--sheet-gap); padding-inline: var(--margin);
+  --row-h: clamp(8.5rem, 20vw, 20rem);
+}
+/* Phones: a real contact sheet, two landscapes to a row (a 3:2 frame at 7.25rem is 174px, two
+   fit 358px), at native aspect with the 4px hairline between frames. */
+@media (max-width: 639px) { .sheet { --row-h: 7.25rem; } }
+.sheet::after { content: ""; flex-grow: 1e6; }
+.tile {
+  position: relative; display: block;
+  /* Scaled x100 so a row holding a single portrait (AR sum < 1) still fills the line:
+     flex gives items only sum(flex-grow) of the free space when that sum is below 1. */
+  flex-grow: calc(var(--w) / var(--h) * 100);
+  flex-basis: calc(var(--row-h) * var(--w) / var(--h));
+  aspect-ratio: var(--w) / var(--h);
+  align-self: flex-start;
+  min-width: 0; min-height: 0; /* content-visibility's intrinsic size must never set a floor on the flex basis */
+  background: color-mix(in oklab, var(--dom) 40%, var(--ink-0));
+  overflow: clip; content-visibility: auto; contain-intrinsic-size: auto 20rem;
+  transition: opacity var(--dur-ui) var(--ease-out);
+}
+.tile .frame { height: 100%; background: none; }
+.tile img { width: 100%; height: 100%; display: block; }
+.chip {
+  position: absolute; left: 0.5rem; bottom: 0.5rem; z-index: 1;
+  max-width: calc(100% - 1rem);
+  background: var(--ink-1); color: var(--fg);
+  padding: 0.25rem 0.5rem;
+  font-size: var(--step--1); line-height: 1.35; letter-spacing: 0.01em;
+  opacity: 0;
+  transition: opacity var(--dur-hover) var(--ease-out);
+  pointer-events: none;
+}
+.tile:focus-visible .chip { opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover .chip { opacity: 1; }
+  .sheet:has(.tile:hover) .tile:not(:hover) { opacity: 0.5; transition-duration: var(--dur-dim); }
+}
+.sheet:has(.tile:focus-visible) .tile:not(:focus-visible) { opacity: 0.5; transition-duration: var(--dur-dim); }
+
+.listview { align-items: start; }
+.lv-table { grid-column: 1 / -1; width: 100%; font-size: var(--step-0); line-height: 1.35; }
+.lv-table th {
+  color: var(--fg-3); font-weight: 400; text-align: left;
+  height: 2.5rem; padding-right: 1.5ch; border-bottom: 1px solid var(--line);
+}
+.lv-table td {
+  color: var(--fg-2); height: 2.5rem; padding-right: 1.5ch;
+  border-bottom: 1px solid var(--line);
+}
+/* Tabular figures for the numeric column only: Schibsted's tnum also widens commas. */
+.lv-table td.lv-date { font-variant-numeric: tabular-nums lining-nums; }
+.lv-table tbody tr { position: relative; }
+.lv-table tbody tr:hover td, .lv-table tbody tr:focus-within td { background: var(--ink-1); }
+.lv-title a { color: var(--fg); }
+.lv-title a::after { content: ""; position: absolute; inset: 0; }
+.lv-title a:focus-visible { outline: none; }
+.lv-table tbody tr:has(a:focus-visible) { outline: 2px solid var(--fg); outline-offset: -2px; }
+.lv-sub { display: none; }
+.lv-preview { display: none; }
+@media (min-width: 1024px) {
+  .lv-table { grid-column: 1 / 9; }
+  .lv-preview { display: block; grid-column: 9 / 13; position: sticky; top: 6.5rem; }
+  .lv-pv { width: min(100%, calc(70svh * var(--ar))); margin-left: auto; }
+}
+@media (max-width: 639px) {
+  .lv-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .lv-table tbody tr { display: block; padding-block: var(--s-3); border-bottom: 1px solid var(--line); }
+  .lv-table td { display: none; height: auto; border: 0; }
+  .lv-table td.lv-title { display: grid; row-gap: 0.125rem; }
+  .lv-sub { display: block; color: var(--fg-2); font-size: var(--step--1); }
+}
+
+.empty {
+  padding: var(--s-8) var(--margin);
+  color: var(--fg-2); font-size: var(--step-0);
+  display: flex; flex-wrap: wrap; column-gap: 1.5ch;
+}
+.empty a { color: var(--fg); text-decoration: underline 1px var(--fg-3); text-underline-offset: 0.2em; }
+
+/* --------------------------------------------------------------- viewer */
+
+.sm-only { display: none; }
+@media (max-width: 639px) {
+  .sm-only { display: revert; }
+  .lg-only { display: none !important; }
+}
+
+.viewer {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  height: calc(100svh - var(--header-h));
+}
+html[data-page="viewer"] body { min-height: 0; }
+.stage {
+  position: relative;
+  min-height: 0;
+  container-type: size;
+  display: grid;
+  place-items: center;
+  padding: var(--s-4) var(--margin) 0;
+  touch-action: pan-y pinch-zoom;
+}
+.stage .frame {
+  width: min(100cqw, calc(100cqh * var(--ar)));
+  will-change: auto;
+}
+img[data-hero] { view-transition-name: photo; }
+/* Once the hero is decoded its placeholder goes, so no colored edge shows during a slide. */
+.stage .frame:has(> img.is-loaded) { background: none; }
+.stage .frame:has(> img.is-loaded)::before { content: none; }
+.zone { position: absolute; top: 0; bottom: 0; width: 33.333%; z-index: 2; }
+.zone--prev { left: 0; cursor: w-resize; }
+.zone--next { right: 0; cursor: e-resize; }
+
+.band {
+  min-height: 5.5rem;
+  padding: var(--s-4) var(--margin);
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  align-items: start;
+  font-size: var(--step-0); line-height: 1.35;
+}
+.b-title { grid-column: 1 / 5; }
+.b-t { color: var(--fg); }
+.b-p { color: var(--fg-2); }
+.exif {
+  grid-column: 5 / 10;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: var(--gutter); row-gap: var(--s-1);
+  font-size: var(--step--1); letter-spacing: 0.01em;
+}
+.ex { display: grid; grid-template-columns: auto 1fr; column-gap: 1ch; }
+.ex dt { color: var(--fg-2); }
+.ex dd { color: var(--fg); }
+.b-nav { grid-column: 10 / 13; justify-self: end; text-align: right; display: grid; row-gap: 0; }
+.b-ctx, .b-links { display: flex; justify-content: flex-end; column-gap: 1.5ch; }
+.b-ctx a { color: var(--fg-2); }
+.b-counter .cur { color: var(--fg); }
+.b-counter .tot { color: var(--fg-3); white-space: pre; }
+.b-links { column-gap: 2ch; }
+.b-links a { color: var(--fg-2); }
+/* At the ends of the sequence the dead link stays in place as tertiary text, so Next and Close
+   never shift and the row always reads Previous / Next / Close. */
+.b-links .is-off { color: var(--fg-3); }
+/* Previous / Next / Close are short words; each gets a 44px-tall hit area around it without
+   changing the band's line (the area is invisible and overlaps nothing but ground). */
+.b-links a, .b-ctx a { position: relative; }
+.b-links a::after, .b-ctx a::after { content: ""; position: absolute; inset: calc(50% - 22px) -0.75ch; }
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .b-title { grid-column: 1 / 4; }
+  .exif { grid-column: 4 / 10; }
+  .b-nav { grid-column: 10 / 13; }
+  .viewer { height: auto; min-height: calc(100svh - var(--header-h)); grid-template-rows: calc(100svh - var(--header-h) - 7rem) auto; }
+  .viewer:not(:has(.exif)) { grid-template-rows: calc(100svh - var(--header-h) - 3.25rem) auto; }
+}
+/* Without EXIF the band is one line: title and place on the left; counter, series and
+   Previous / Next / Close on the right. The photo gets the height the second line used. */
+@media (min-width: 640px) {
+  .band:not(:has(.exif)) {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+    column-gap: 4ch; min-height: 0;
+    padding: var(--s-3) var(--margin) var(--s-4);
+  }
+  .band:not(:has(.exif)) .b-title { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 1.5ch; min-width: 0; }
+  .band:not(:has(.exif)) .b-nav { display: flex; align-items: baseline; column-gap: 4ch; margin-left: auto; }
+}
+
+@media (max-width: 639px) {
+  /* Phones: the Viewer is exactly one screen below the one-row header and never scrolls
+     (unless Details is opened). Close sits top right on the header's row, opposite the name.
+     The bottom bar (thumb zone) holds the caption and, under it, Previous / counter / Next. The
+     photo (edge to edge, native aspect, as large as the screen allows, so a portrait fills the
+     height) is alone in all the height between the header and that bar, centered in it, as in
+     a phone's own photo viewer. Swipe anywhere on the viewer for Previous / Next; tap the photo
+     to hide or show the chrome. Turned sideways, a landscape fills the screen (see below). */
+  html[data-page="viewer"] .nav { display: none; }
+  .viewer {
+    --photo-max: calc(100dvh - 44px - 7.5rem);
+    position: relative;
+    display: flex; flex-direction: column;
+    height: calc(100dvh - 44px);
+    touch-action: pan-y pinch-zoom;
+  }
+  /* Equal spare height above and below the photo; the caption and control row come last. */
+  .viewer::before, .viewer::after { content: ""; flex: 1 1 0; }
+  .viewer::after { order: 1; }
+  .b-title, .exif-details { order: 2; }
+  .b-nav { order: 3; }
+  .viewer:has(.exif-details[open]) { height: auto; min-height: calc(100dvh - 44px); }
+  .b-close-top {
+    position: absolute; top: -44px; right: var(--margin); z-index: 21;
+    height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: flex-end;
+    color: var(--fg); font-size: var(--step-0); line-height: 1.35;
+    view-transition-name: viewer-close;
+  }
+  .band { display: contents; }
+  .stage {
+    flex: none; display: block; padding: 0; container-type: normal;
+    height: min(calc(100vw / var(--ar)), var(--photo-max));
+  }
+  .stage .frame { width: min(100vw, calc(var(--photo-max) * var(--ar))); margin-inline: auto; }
+  /* A tap on the photo shows or hides the chrome (viewer.ts); Previous / Next are the swipe
+     and the bar's links, so the tap halves are off. */
+  .zone { display: none; }
+  .b-title {
+    flex: none; padding: var(--s-3) var(--margin) 0; font-size: var(--step-0); line-height: 1.35;
+    display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 1.5ch;
+  }
+  /* Chrome hidden: the header, Close and the bottom bar fade out and stop taking taps; the photo
+     holds its place. */
+  .site-header, .b-close-top, .b-title, .exif-details, .b-nav {
+    transition: opacity var(--dur-ui) var(--ease-out), visibility 0s linear 0s;
+  }
+  html[data-chrome="off"] :is(.site-header, .b-close-top, .b-title, .exif-details, .b-nav) {
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity var(--dur-ui) var(--ease-out), visibility 0s linear var(--dur-ui);
+  }
+  .exif-details { flex: none; margin: var(--s-3) var(--margin) 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: var(--step-0); }
+  .exif-details summary { color: var(--fg-2); padding-block: 0.75rem; cursor: pointer; list-style: none; }
+  .exif-details summary::-webkit-details-marker { display: none; }
+  .exif-details[open] summary { color: var(--fg); }
+  .exif-sm { display: grid; row-gap: var(--s-1); padding-bottom: var(--s-3); font-size: var(--step--1); }
+  .exif-sm .ex { grid-template-columns: 9rem 1fr; }
+  .b-nav {
+    flex: none; display: block; text-align: left;
+    padding: var(--s-1) var(--margin) max(var(--s-2), env(safe-area-inset-bottom));
+    font-size: var(--step-0); line-height: 1.35;
+  }
+  .b-links { display: flex; justify-content: space-between; align-items: center; column-gap: 1ch; }
+  .b-links a { color: var(--fg); }
+  /* 44px minimum tap targets */
+  .b-links > * { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; }
+  .b-links > :first-child { justify-content: flex-start; }
+  .b-links > :nth-child(3) { justify-content: flex-end; }
+}
+.b-close-top { display: none; }
+@media (max-width: 639px) { .b-close-top { display: inline-flex; } }
+
+/* Phones turned sideways: the photo takes the full screen height. The header steps aside on the
+   Viewer, and the band becomes a narrow column on the right: caption at the top; counter, series
+   and Previous / Next / Close at the bottom. A 3:2 landscape on an 844 x 390 screen is 585 x 390. */
+@media (min-width: 640px) and (max-height: 540px) and (orientation: landscape) {
+  html[data-page="viewer"] .site-header { display: none; }
+  .viewer {
+    height: 100dvh; min-height: 0;
+    grid-template-rows: minmax(0, 1fr); grid-template-columns: minmax(0, 1fr) 13rem;
+  }
+  .viewer:not(:has(.exif)) { grid-template-rows: minmax(0, 1fr); }
+  .stage { padding: var(--s-2) 0 var(--s-2) max(var(--s-2), env(safe-area-inset-left)); }
+  .band, .band:not(:has(.exif)) {
+    display: flex; flex-direction: column; flex-wrap: nowrap; justify-content: space-between; align-items: stretch;
+    padding: var(--s-3) max(var(--margin), env(safe-area-inset-right)) var(--s-3) var(--s-4);
+    min-height: 0;
+  }
+  .exif { display: none; }
+  .band .b-title, .band:not(:has(.exif)) .b-title { display: block; }
+  .band .b-nav, .band:not(:has(.exif)) .b-nav {
+    display: grid; row-gap: var(--s-1); justify-self: stretch; text-align: left; margin: 0;
+  }
+  .b-ctx, .b-links { justify-content: flex-start; flex-wrap: wrap; }
+  .b-links { column-gap: 2ch; }
+  .b-links a, .b-links .is-off { min-height: 44px; display: inline-flex; align-items: center; }
+}
+
+/* ----------------------------------------------------------------- info */
+
+.info { padding-top: var(--s-12); row-gap: var(--s-12); align-items: start; }
+.info-text {
+  grid-column: 1 / -1;
+  font-size: var(--step-1); line-height: 1.5; letter-spacing: -0.005em;
+  max-width: 42ch; color: var(--fg);
+}
+.info-dl { grid-column: 1 / -1; font-size: var(--step-0); }
+.info-fig { grid-column: 1 / -1; width: min(100%, calc(70svh * var(--ar))); }
+.info-fig .cap { grid-template-columns: auto minmax(0, 1fr); }
+.info-row {
+  display: grid; grid-template-columns: 9rem minmax(0, 1fr); column-gap: var(--gutter);
+  padding-block: 0.625rem; border-bottom: 1px solid var(--line);
+}
+.info-row:first-child { border-top: 1px solid var(--line); }
+.info-row dt { color: var(--fg-2); }
+.info-row dd { color: var(--fg); }
+/* Links in the details look like links: underlined, as in running text. */
+.info-dl a { color: var(--fg); text-decoration: underline 1px var(--fg-3); text-underline-offset: 0.2em; }
+.info-body { grid-column: 1 / -1; display: grid; row-gap: var(--s-12); align-content: start; }
+/* lg: a spread. The photograph (a landscape) takes cols 6-12; the text block takes cols 1-5
+   (the paragraph's 42ch measure). The paragraph's first line sits on the photo's top edge and
+   the details follow it directly, so bio and details read as one block, with no empty middle. */
+@media (min-width: 1024px) {
+  .info { padding-top: var(--s-12); align-items: start; }
+  .info-body {
+    grid-column: 1 / 6; grid-row: 1;
+    display: flex; flex-direction: column; row-gap: var(--s-8);
+    margin-top: -0.3em;
+  }
+  .info-text, .info-dl { grid-column: auto; }
+  .info-fig {
+    grid-column: 6 / 13; grid-row: 1; justify-self: end; align-self: start;
+    width: min(100%, calc((100svh - var(--header-h) - var(--s-12) - 6rem) * var(--ar)));
+  }
+}
+
+/* ------------------------------------------------------------------ 404 */
+
+.nf { padding-top: var(--s-12); }
+.nf-block { grid-column: 1 / -1; display: grid; row-gap: var(--s-4); }
+@media (min-width: 640px) { .nf-block { grid-column: 1 / 9; } }
+.nf-code { color: var(--fg-3); }
+.nf-text { font-size: var(--step-1); line-height: 1.5; letter-spacing: -0.005em; color: var(--fg); }
+.nf-links { display: flex; column-gap: 2ch; }
+.nf-links a { color: var(--fg-2); }
+
+/* ʻokina: Schibsted spaces U+02BB like a free-standing mark; pull it in to a quote's fit. */
+.ok { margin-inline: -0.13em; }
+/* Display size: the same U+02BB, tightened less (a hair more on the left, where the first i's
+   side bearing is wider), so it sits as a diacritic between the two i's without touching either. */
+.okd { margin-inline: -0.12em -0.07em; }

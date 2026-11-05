@@ -1,0 +1,108 @@
+---
+import { typeset } from '../lib/text';
+import { categories, groups, archiveOrder } from '../lib/archive';
+import { url } from '../lib/url';
+
+interface Props { category?: string }
+const { category } = Astro.props;
+const total = archiveOrder.length;
+const shown = category ? archiveOrder.filter((p) => p.category === category).length : total;
+const here = url(category ? `archive/${category}/` : 'archive/');
+const live = category ? `${shown} of ${total}` : `${total} photographs`;
+const currentLabel = category ? (categories.find((c) => c.slug === category)?.label ?? category) : 'All';
+// One row of facets covering every photograph: All, then each category in the enum's order
+// (the place series first, then the kinds of picture). Each photograph has exactly one
+// category, so the counts add up to All.
+const facetGroups = [
+  { label: '', facets: [{ slug: '', label: 'All', count: total }, ...categories] },
+];
+---
+
+<div class="filterbar" data-filterbar>
+  <div class="fb-row fb-row1">
+    {/* Phones: the categories fold into one disclosure, "Filter  Greece  9 of 32", that opens
+        them as wrapped rows. Without JS the button is hidden and the rows simply show. */}
+    <button type="button" class="fb-toggle" aria-expanded="false" aria-controls="fb-cats" data-fb-toggle>
+      <span class="fb-toggle-l">Filter</span>
+      <span class="fb-toggle-v" data-fb-current><Fragment set:html={typeset(currentLabel)} /></span>
+      <span class="fb-toggle-c num" data-fb-count>{category ? `${shown} of ${total}` : total}</span>
+    </button>
+    <nav class="fb-scroll fb-cats" id="fb-cats" aria-label="Categories">
+      {
+        facetGroups.map((g) => (
+          <div class:list={['group', { 'group--all': !g.label }]} role={g.label ? 'group' : undefined} aria-label={g.label || undefined}>
+            {g.label && <span class="group-l">{g.label}</span>}
+            <ul class="fb-list">
+              {g.facets.map((f) => {
+                const active = (f.slug || undefined) === category;
+                return (
+                  <li>
+                    <a
+                      class:list={['opt', 'facet', { 'is-active': active }]}
+                      href={url(f.slug ? `archive/${f.slug}/` : 'archive/')}
+                      data-astro-reload
+                      data-filter="cat"
+                      data-value={f.slug || 'all'}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      {active && <span class="mk mk-cat" aria-hidden="true" />}
+                      <span class="opt-l"><Fragment set:html={typeset(f.label)} /></span>
+                      <span class="c num" data-count={f.slug || 'all'}>{f.count}</span>
+                    </a>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))
+      }
+    </nav>
+    <div class="fb-side">
+      <p class="live num" data-live aria-live="polite">{live}</p>
+      <div class="group group--view" role="group" aria-label="View">
+        <span class="group-l">View</span>
+        <ul class="fb-list">
+          <li>
+            <a class="opt is-active" href={here} data-astro-reload data-filter="view" data-value="sheet">
+              <span class="mk mk-view" aria-hidden="true" /><span class="opt-l">Sheet</span>
+            </a>
+          </li>
+          <li>
+            <a class="opt" href={`${here}?view=list`} data-astro-reload data-filter="view" data-value="list">
+              <span class="opt-l">List</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  {
+    groups.length > 0 && (
+      <div class="fb-row fb-row2">
+        <div class="fb-scroll">
+          {groups.map((g) => (
+            <div class="group" role="group" aria-label={g.label}>
+              <span class="group-l">{g.label}</span>
+              <ul class="fb-list">
+                {[{ value: 'all', label: 'All' }, ...g.options].map((o) => (
+                  <li>
+                    <a
+                      class:list={['opt', { 'is-active': o.value === 'all' }]}
+                      href={o.value === 'all' ? here : `${here}?${g.key}=${o.value}`}
+                      data-astro-reload
+                      data-filter={g.key}
+                      data-value={o.value}
+                    >
+                      {o.value === 'all' && <span class={`mk mk-${g.key === 'camera' ? 'cam' : 'year'}`} aria-hidden="true" />}
+                      <span class="opt-l"><Fragment set:html={typeset(o.label)} /></span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+</div>

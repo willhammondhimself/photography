@@ -1,0 +1,60 @@
+---
+import Base from '../layouts/Base.astro';
+import Photo from '../components/Photo.astro';
+import { byId, series, site } from '../lib/photos';
+import { WIDTHS } from '../lib/images';
+import { placeDate } from '../lib/format';
+import { typeset } from '../lib/text';
+import { url } from '../lib/url';
+
+const intro = site.school ? `I'm ${site.name}, a student at ${site.school}.` : `I'm ${site.name}.`;
+const contact = site.email ? 'For portraits or events, email me.' : 'For portraits or events, message me on Instagram.';
+const rows = [
+  site.email && { k: 'Email', v: site.email, href: `mailto:${site.email}` },
+  site.instagram && { k: 'Instagram', v: `@${site.instagram}`, href: `https://www.instagram.com/${site.instagram}/` },
+  site.city && { k: 'Based in', v: site.city },
+  { k: 'Cameras', v: 'Sony A7C II, Panasonic S5' },
+  { k: 'Available for', v: 'Portraits, events' },
+].filter(Boolean) as { k: string; v: string; href?: string }[];
+// The series, each a link: the details end on where the work is.
+const seriesLinks = series.map((s) => `<a href="${url(`series/${s.slug}/`)}">${typeset(s.title)}</a>`).join(', ');
+
+// One photograph beside the text, so the page shows the work it describes: a landscape, so the
+// photo and the text block are about the same height and the spread has no empty half.
+const photo = byId.get('cathedral-spires-in-monochrome')!;
+const pd = placeDate(photo.place, photo.date);
+---
+
+<Base title="Info" page="info">
+  <div class="info grid">
+    <h1 class="sr-only">Info</h1>
+    <div class="info-body">
+    <p class="info-text">
+      {intro} I photograph climbing, the places I go to climb, and the people I go with, plus portraits and events around campus. Most of this was shot on a Sony A7C II, the rest on a Panasonic S5. {contact}
+    </p>
+    <dl class="info-dl">
+        {
+          rows.map((r) => (
+            <div class="info-row">
+              <dt>{r.k}</dt>
+              <dd>{r.href ? <a href={r.href}>{r.v}</a> : r.v}</dd>
+            </div>
+          ))
+        }
+        <div class="info-row">
+          <dt>Series</dt>
+          <dd><Fragment set:html={seriesLinks} /></dd>
+        </div>
+    </dl>
+    </div>
+    <figure class="fig info-fig" style={`--ar:${photo.ar.toFixed(5)}`}>
+        <a class="plate-link" data-photo href={url(`photo/${photo.id}/`)}>
+          <Photo photo={photo} widths={WIDTHS.preview} sizes="(min-width: 1024px) 30vw, 100vw" lqip />
+        </a>
+        <figcaption class="cap">
+          <span class="cap-t"><Fragment set:html={typeset(photo.title)} /></span>
+          {pd && <span class="cap-p"><Fragment set:html={typeset(pd)} /></span>}
+        </figcaption>
+    </figure>
+  </div>
+</Base>

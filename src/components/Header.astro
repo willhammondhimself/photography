@@ -1,0 +1,32 @@
+---
+import { url } from '../lib/url';
+import { photos, series, site } from '../lib/photos';
+
+interface Props { section?: 'Index' | 'Series' | 'Archive' | 'Info' }
+const path = Astro.url.pathname;
+// The Viewer is not a section of its own: it keeps the marker on the section its sequence
+// belongs to (Series for a series photograph, Archive for a single).
+const { section } = Astro.props;
+const raw = [
+  { label: 'Index', href: url(''), count: undefined, active: path === url('') },
+  { label: 'Series', href: url('series/'), count: series.length, active: path.startsWith(url('series/')) },
+  { label: 'Archive', href: url('archive/'), count: photos.length, active: path.startsWith(url('archive/')) },
+  { label: 'Info', href: url('info/'), count: undefined, active: path.startsWith(url('info/')) },
+];
+const items = section ? raw.map((it) => ({ ...it, active: it.label === section })) : raw;
+---
+
+<header class="site-header">
+  <a class="wordmark" href={url('')}>{site.name}</a>
+  <nav class="nav" aria-label="Site">
+    {
+      items.map((it) => (
+        <a class:list={['nav-item', { 'is-active': it.active }]} href={it.href} aria-current={it.active ? 'page' : undefined}>
+          {it.active && <span class="mk nav-marker" aria-hidden="true" />}
+          <span class="nav-label">{it.label}</span>
+          {it.count !== undefined && <span class="count">{it.count}</span>}
+        </a>
+      ))
+    }
+  </nav>
+</header>

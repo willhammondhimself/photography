@@ -1,0 +1,53 @@
+---
+import { typeset } from '../lib/text';
+import Photo from './Photo.astro';
+import { seriesBySlug, type Photo as P } from '../lib/photos';
+import { tileData } from '../lib/archive';
+import { WIDTHS, previewSizes } from '../lib/images';
+import { captionDate, placeDate } from '../lib/format';
+import { url } from '../lib/url';
+
+interface Props { photos: P[]; category?: string }
+const { photos, category } = Astro.props;
+
+const seriesTitle = (p: P) => (p.series ? seriesBySlug.get(p.series)?.title ?? '' : '');
+const cols = [
+  { key: 'place', label: 'Place', value: (p: P) => p.place },
+  { key: 'series', label: 'Series', value: seriesTitle },
+  { key: 'camera', label: 'Camera', value: (p: P) => p.exif.camera ?? '' },
+  { key: 'date', label: 'Date', value: (p: P) => captionDate(p.date) },
+].filter((c) => photos.some((p) => c.value(p)));
+---
+
+<div class="listview grid" data-listview hidden>
+  <table class="lv-table">
+    <thead>
+      <tr>
+        <th scope="col">Title</th>
+        {cols.map((c) => <th scope="col" class={`lv-${c.key}`}>{c.label}</th>)}
+      </tr>
+    </thead>
+    <tbody>
+      {
+        photos.map((p) => (
+          <tr data-row={p.id} hidden={!!category && p.category !== category} {...tileData(p)}>
+            <td class="lv-title">
+              <a href={url(`photo/${p.id}/`)} data-row-link={p.id}><Fragment set:html={typeset(p.title)} /></a>
+              <span class="lv-sub"><Fragment set:html={typeset(placeDate(p.place, p.date))} /></span>
+            </td>
+            {cols.map((c) => <td class={`lv-${c.key} num-ish`}><Fragment set:html={typeset(c.value(p))} /></td>)}
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <div class="lv-preview" aria-hidden="true">
+    {
+      photos.map((p) => (
+        <a class="lv-pv" data-photo data-pv={p.id} href={url(`photo/${p.id}/`)} tabindex="-1" hidden style={`--ar:${p.ar.toFixed(5)}`}>
+          <Photo photo={p} widths={WIDTHS.preview} sizes={previewSizes} lqip decorative />
+        </a>
+      ))
+    }
+  </div>
+</div>

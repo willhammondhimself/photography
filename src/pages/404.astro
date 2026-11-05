@@ -1,0 +1,14 @@
+---
+import Base from '../layouts/Base.astro';
+import { url } from '../lib/url';
+---
+
+<Base title="Page not found" page="notfound">
+  <div class="nf grid">
+    <div class="nf-block">
+      <h1 class="nf-code num">404</h1>
+      <p class="nf-text">This page doesn't exist.</p>
+      <p class="nf-links"><a href={url('')}>Index</a><a href={url('archive/')}>Archive</a></p>
+    </div>
+  </div>
+</Base>

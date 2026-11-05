@@ -1,0 +1,16 @@
+---
+import Base from '../../layouts/Base.astro';
+import Viewer from '../../components/Viewer.astro';
+import { photos, type Photo } from '../../lib/photos';
+
+export function getStaticPaths() {
+  return photos.map((photo) => ({ params: { id: photo.id }, props: { photo } }));
+}
+
+interface Props { photo: Photo }
+const { photo } = Astro.props;
+---
+
+<Base title={photo.title} page="viewer" section={photo.series ? 'Series' : 'Archive'} ogPhoto={photo} description={photo.alt} footer={false}>
+  <Viewer photo={photo} />
+</Base>

@@ -1,0 +1,154 @@
+/* Motion follows the photo. Only transform and opacity move. */
+
+@keyframes vt-fade-in  { from { opacity: 0; } }
+@keyframes vt-fade-out { to   { opacity: 0; } }
+@keyframes fade-in  { from { opacity: 0; } }
+@keyframes fade-out { to   { opacity: 0; } }
+
+/* ------------------------------------------------------------ page */
+
+/* Sequential: the old page's text is gone before the new page's text arrives, so captions
+   and layouts never double-expose. The header holds still throughout. */
+::view-transition-old(root) { animation: var(--dur-swap-out) var(--ease-exit) both vt-fade-out; }
+::view-transition-new(root) { animation: var(--dur-page) var(--ease-out) var(--dur-swap-out) both vt-fade-in; }
+
+::view-transition-group(site-header),
+::view-transition-old(site-header),
+::view-transition-new(site-header) { animation: none; }
+
+::view-transition-group(nav-marker),
+::view-transition-group(filter-marker-cat),
+::view-transition-group(filter-marker-cam),
+::view-transition-group(filter-marker-year) {
+  animation-duration: var(--dur-marker);
+  animation-timing-function: var(--ease-out);
+}
+/* Marker leaving the nav (on the Viewer): fade out with the root. */
+::view-transition-old(nav-marker):only-child { animation: var(--dur-exit) var(--ease-exit) both fade-out; }
+::view-transition-new(nav-marker):only-child { animation: var(--dur-page) var(--ease-out) both fade-in; }
+::view-transition-old(filter-marker-cat):only-child,
+::view-transition-old(filter-marker-cam):only-child,
+::view-transition-old(filter-marker-year):only-child { animation: var(--dur-exit) var(--ease-exit) both fade-out; }
+::view-transition-new(filter-marker-cat):only-child,
+::view-transition-new(filter-marker-cam):only-child,
+::view-transition-new(filter-marker-year):only-child { animation: var(--dur-page) var(--ease-out) both fade-in; }
+
+/* ------------------------------------------------- thumbnail <-> viewer */
+
+/* A firm expo-out with no spring: the photo is 97% of the way there at half time, so it lands
+   instead of drifting into place. */
+::view-transition-group(photo) {
+  animation-duration: var(--dur-morph);
+  animation-timing-function: var(--ease-out);
+}
+::view-transition-old(photo),
+::view-transition-new(photo) {
+  height: 100%;
+  object-fit: contain;
+  animation-duration: var(--dur-morph);
+  animation-timing-function: var(--ease-out);
+}
+::view-transition-old(photo):only-child { animation: var(--dur-exit) var(--ease-exit) both fade-out; }
+::view-transition-new(photo):only-child { animation: var(--dur-page) var(--ease-out) both fade-in; }
+
+/* ------------------------------------------------ viewer next / prev */
+
+/* A strip of film advancing one frame: the outgoing and incoming photos move in lockstep, the
+   same direction, the same distance (--slide-d: one screen width plus a gutter, set by
+   motion.ts), on the same curve and clock. Both are fully opaque the whole way: no fade, no dim,
+   no overlay. The gap between them never changes, and the outgoing photo is off screen exactly
+   when the incoming one lands. The caption and counter swap in one cut early in the move. */
+html[data-nav]::view-transition-group(photo),
+html[data-nav]::view-transition-group(photo-out) { animation: none; }
+html[data-nav]::view-transition-old(root) { animation: var(--dur-slide-mid) steps(1, end) both vt-fade-out; }
+html[data-nav]::view-transition-new(root) { animation: var(--dur-slide-mid) steps(1, end) both vt-fade-in; }
+html[data-nav]::view-transition-old(photo-out),
+html[data-nav]::view-transition-new(photo) { animation-duration: var(--dur-slide); animation-timing-function: var(--ease-slide); animation-fill-mode: both; }
+html[data-nav="next"]::view-transition-old(photo-out) { animation-name: slide-out-left; }
+html[data-nav="next"]::view-transition-new(photo)     { animation-name: slide-in-right; }
+html[data-nav="prev"]::view-transition-old(photo-out) { animation-name: slide-out-right; }
+html[data-nav="prev"]::view-transition-new(photo)     { animation-name: slide-in-left; }
+@keyframes slide-out-left  { to   { transform: translateX(calc(-1 * var(--slide-d))); } }
+@keyframes slide-out-right { to   { transform: translateX(var(--slide-d)); } }
+@keyframes slide-in-right  { from { transform: translateX(var(--slide-d)); } }
+@keyframes slide-in-left   { from { transform: translateX(calc(-1 * var(--slide-d))); } }
+
+/* Thumbnail <-> viewer: the page around the photo gets out of its way at once (the index
+   caption is gone within --dur-morph-clear, before the growing photo reaches it), and the
+   viewer's caption band only comes up once the photo has landed. motion.ts sets data-morph. */
+/* Opening: the page around the photo is gone on the first frame (no fade), so no neighbouring
+   photo ghosts under the growing one. Closing: the band fades out within --dur-morph-clear. */
+html[data-morph="open"]::view-transition-old(root) { animation: none; opacity: 0; }
+html[data-morph="close"]::view-transition-old(root) { animation: var(--dur-morph-clear) var(--ease-out) both vt-fade-out; }
+html[data-morph="open"]::view-transition-new(root) { animation: var(--dur-morph-band) var(--ease-out) var(--dur-morph-land) both vt-fade-in; }
+html[data-morph="close"]::view-transition-new(root) { animation: var(--dur-page) var(--ease-out) var(--dur-morph-clear) both vt-fade-in; }
+
+/* Phones: the Viewer's Close shares the header's row. Its own layer, so the header's snapshot
+   never covers it: it holds still between photos and arrives or leaves with the band. */
+::view-transition-group(viewer-close),
+::view-transition-old(viewer-close),
+::view-transition-new(viewer-close) { animation: none; }
+::view-transition-new(viewer-close):only-child { animation: var(--dur-morph-band) var(--ease-out) var(--dur-morph-land) both vt-fade-in; }
+::view-transition-old(viewer-close):only-child { animation: var(--dur-morph-clear) var(--ease-out) both vt-fade-out; }
+
+/* ------------------------------------------------------ archive filter */
+
+/* Filtering is not a view transition: archive.ts animates the live tiles directly (FLIP),
+   so it starts on the click with no snapshot and never cross-dissolves two grids.
+   The filter bar has its own layer for page transitions: arriving at or leaving the
+   Archive, it fades with the page; on a Sheet <-> List switch it holds still. */
+::view-transition-group(filterbar) { animation: none; }
+::view-transition-new(filterbar):not(:only-child) { animation: none; }
+::view-transition-old(filterbar):not(:only-child) { display: none; }
+::view-transition-old(filterbar):only-child { animation: var(--dur-swap-out) var(--ease-exit) both vt-fade-out; }
+::view-transition-new(filterbar):only-child { animation: var(--dur-page) var(--ease-out) var(--dur-swap-out) both vt-fade-in; }
+/* Sheet <-> List: plain root crossfade. */
+html[data-vt="view"]::view-transition-old(root),
+html:active-view-transition-type(view)::view-transition-old(root) { animation: var(--dur-swap-out) var(--ease-exit) both vt-fade-out; }
+html[data-vt="view"]::view-transition-new(root),
+html:active-view-transition-type(view)::view-transition-new(root) { animation: var(--dur-ui) var(--ease-out) var(--dur-swap-out) both vt-fade-in; }
+
+/* ------------------------------------------------------- image settle */
+
+@media (scripting: enabled) {
+  img[data-fade] { transition: opacity 150ms var(--ease-out); }
+  img[data-fade]:not(.is-loaded) { opacity: 0; }
+}
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  img[data-fade] { transition: opacity var(--dur-img) var(--ease-out); }
+}
+img[data-fade].no-fade { transition: none; }
+
+/* --------------------------------------------------------------- scroll */
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+
+  @supports (animation-timeline: scroll()) {
+    /* Opener recede: pulls in from the screen edges toward the margins. */
+    .is-opener .frame {
+      transform-origin: 50% 0;
+      animation: recede linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 70vh;
+    }
+  }
+  @supports (animation-timeline: view()) {
+    .series-plates > .plate:not(:first-child) .fig {
+      animation: plate-entry linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 20%;
+    }
+  }
+}
+@keyframes recede { to { transform: scale(0.94); } }
+@keyframes plate-entry { from { opacity: 0.2; transform: scale(1.025); } }
+
+/* ------------------------------------------------------- reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) { animation: none !important; }
+}

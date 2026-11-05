@@ -1,0 +1,21 @@
+---
+import Plate from './Plate.astro';
+import type { Photo } from '../lib/photos';
+
+interface Props {
+  photos: [Photo, Photo];
+  n: [string, string];
+  tot?: string;
+  eager?: boolean;
+}
+
+const { photos, n, tot, eager = false } = Astro.props;
+const sum = photos[0].ar + photos[1].ar;
+---
+
+<section class="plate plate--pair" aria-label={`${photos[0].title}, ${photos[1].title}`}>
+  <div class="pair" style={`--sum:${sum.toFixed(5)}`}>
+    <Plate photo={photos[0]} kind="pair" n={n[0]} tot={tot} eager={eager} bare />
+    <Plate photo={photos[1]} kind="pair" n={n[1]} tot={tot} eager={eager} bare />
+  </div>
+</section>

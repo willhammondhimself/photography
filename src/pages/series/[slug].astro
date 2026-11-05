@@ -1,0 +1,53 @@
+---
+import { typeset, typesetDisplay } from '../../lib/text';
+import Base from '../../layouts/Base.astro';
+import PlateSequence from '../../components/PlateSequence.astro';
+import Photo from '../../components/Photo.astro';
+import { series, seriesPlace, type Series } from '../../lib/photos';
+import { pad } from '../../lib/format';
+import { WIDTHS } from '../../lib/images';
+import { url } from '../../lib/url';
+
+export function getStaticPaths() {
+  return series.map((s, i) => ({ params: { slug: s.slug }, props: { s, next: series[(i + 1) % series.length] } }));
+}
+
+interface Props { s: Series; next: Series }
+const { s, next } = Astro.props;
+const count = s.photos.length;
+---
+
+<Base title={s.title} page="series-page" ogPhoto={s.cover} description={s.blurb || undefined}>
+  <header class="series-head grid">
+    <div class="sh-block">
+      <p class="sh-n num">{pad(s.number)}</p>
+      <h1 class="sh-t"><Fragment set:html={typesetDisplay(s.title)} /></h1>
+      <p class="sh-m">
+        {seriesPlace(s) && <span><Fragment set:html={typeset(seriesPlace(s))} /></span>}
+        {s.dates && <span class="num">{s.dates}</span>}
+        <span class="num">{count} {count === 1 ? 'photograph' : 'photographs'}</span>
+      </p>
+    </div>
+    {s.blurb && <p class="sh-blurb"><Fragment set:html={typeset(s.blurb)} /></p>}
+  </header>
+
+  <PlateSequence plates={s.plates} seriesNumber={s.number} />
+
+  <nav class="series-end grid" aria-label="More series">
+    {
+      next.slug !== s.slug && (
+        <a class="next-series" href={url(`series/${next.slug}/`)}>
+          <span class="ns-img" style={`--ar:${next.cover.ar.toFixed(5)}`}>
+            <Photo photo={next.cover} widths={WIDTHS.preview} sizes="(min-width: 1024px) 30vw, 100vw" lqip decorative />
+          </span>
+          <span class="ns-cap">
+            <span class="ns-label">Next</span>
+            <span class="num ns-n">{pad(next.number)}</span>
+            <span class="ns-t"><Fragment set:html={typeset(next.title)} /></span>
+          </span>
+        </a>
+      )
+    }
+    <a class="all-series" href={url('series/')}>All series</a>
+  </nav>
+</Base>

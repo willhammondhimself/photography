@@ -1,0 +1,16 @@
+---
+import { typeset } from '../lib/text';
+import Photo from './Photo.astro';
+import type { Photo as P } from '../lib/photos';
+import { WIDTHS, photoVars, tileSizes } from '../lib/images';
+import { tileData } from '../lib/archive';
+import { url } from '../lib/url';
+
+interface Props { photo: P; hidden?: boolean; eager?: boolean }
+const { photo, hidden = false, eager = false } = Astro.props;
+---
+
+<a class="tile" data-photo data-tile={photo.id} href={url(`photo/${photo.id}/`)} style={photoVars(photo)} hidden={hidden} {...tileData(photo)}>
+  <Photo photo={photo} widths={WIDTHS.tile} sizes={tileSizes(photo)} eager={eager} />
+  <span class="chip" aria-hidden="true"><Fragment set:html={typeset(photo.title)} /></span>
+</a>

@@ -1,0 +1,16 @@
+---
+import Base from '../../layouts/Base.astro';
+import Archive from '../../components/Archive.astro';
+import { archiveOrder, categories, type Category } from '../../lib/photos';
+
+export function getStaticPaths() {
+  return categories.map((c) => ({ params: { category: c.slug }, props: { slug: c.slug, label: c.label } }));
+}
+
+interface Props { slug: Category; label: string }
+const { slug, label } = Astro.props;
+---
+
+<Base title={`${label} · Archive`} page="archive" ogPhoto={archiveOrder.find((p) => p.category === slug)}>
+  <Archive category={slug} />
+</Base>

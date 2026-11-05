@@ -1,0 +1,82 @@
+---
+import { typeset, typesetDisplay } from '../../lib/text';
+import Base from '../../layouts/Base.astro';
+import Photo from '../../components/Photo.astro';
+import { series, seriesPlace } from '../../lib/photos';
+import { pad } from '../../lib/format';
+import { WIDTHS, previewSizes } from '../../lib/images';
+import { url } from '../../lib/url';
+
+// The list mixes trips and one subject that runs across them. Each group is labeled where it
+// starts, so "Climbing" does not read as a fourth place.
+const KIND_LABEL = { place: 'Places', subject: 'Subject' } as const;
+const groupStart = (i: number) =>
+  new Set(series.map((s) => s.kind)).size > 1 && (i === 0 || series[i - 1].kind !== series[i].kind)
+    ? KIND_LABEL[series[i].kind]
+    : '';
+// The place line repeats nothing: "Hawaiʻi  Hawaiʻi  4" and "Yosemite  Yosemite Valley  6" drop it.
+const placeOf = seriesPlace;
+---
+
+<Base title="Series" page="series" ogPhoto={series[0]?.cover}>
+  <h1 class="sr-only">Series</h1>
+
+  <div class="series-index grid">
+    <ol class="series-list" data-series-list>
+      {
+        series.map((s, i) => (
+          <li class:list={{ 'sr-new-group': i > 0 && groupStart(i) }}>
+            {groupStart(i) && <p class="sr-g">{groupStart(i)}</p>}
+            <a class="series-row" href={url(`series/${s.slug}/`)} data-series-row={i}>
+              <span class="sr-n num">{pad(s.number)}</span>
+              <span class="sr-t"><Fragment set:html={typesetDisplay(s.title)} /></span>
+              <span class="sr-m">
+                {placeOf(s) && <span><Fragment set:html={typeset(placeOf(s))} /></span>}
+                {s.dates && <span class="num">{s.dates}</span>}
+                <span class="sr-c num">{s.photos.length}</span>
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+    <div class="series-preview" aria-hidden="true">
+      {
+        series.map((s, i) => (
+          <div class:list={['pv', { 'is-active': i === 0 }]} data-preview={i} style={`--ar:${s.cover.ar.toFixed(5)}`}>
+            <Photo photo={s.cover} widths={WIDTHS.preview} sizes={previewSizes} lqip eager={i === 0} decorative />
+            <p class="cap pv-cap">
+              <span class="cap-t"><Fragment set:html={typeset(s.cover.title)} /></span>
+              {s.cover.place && <span class="cap-p"><Fragment set:html={typeset(s.cover.place)} /></span>}
+            </p>
+            {s.blurb && <p class="pv-blurb"><Fragment set:html={typeset(s.blurb)} /></p>}
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <ol class="series-blocks">
+    {
+      series.map((s, i) => (
+        <li class:list={['sb', { 'sr-new-group': i > 0 && groupStart(i) }]}>
+          {groupStart(i) && <p class="sr-g">{groupStart(i)}</p>}
+          <a class="sb-link" href={url(`series/${s.slug}/`)}>
+            <span class="sb-img" style={`--ar:${s.cover.ar.toFixed(5)}`}>
+              <Photo photo={s.cover} widths={WIDTHS.preview} sizes={previewSizes} lqip />
+            </span>
+            <span class="sb-title">
+              <span class="sr-n num">{pad(s.number)}</span>
+              <span class="sb-t"><Fragment set:html={typesetDisplay(s.title)} /></span>
+            </span>
+            <span class="sb-m">
+              {placeOf(s) && <span><Fragment set:html={typeset(placeOf(s))} /></span>}
+              {s.dates && <span class="num">{s.dates}</span>}
+              <span class="sr-c num">{s.photos.length}</span>
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</Base>

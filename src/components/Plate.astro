@@ -1,0 +1,53 @@
+---
+import { typeset } from '../lib/text';
+import Photo from './Photo.astro';
+import type { Photo as P, PlateKind } from '../lib/photos';
+import { WIDTHS, plateSizes } from '../lib/images';
+import { placeDate } from '../lib/format';
+import { url } from '../lib/url';
+
+interface Props {
+  photo: P;
+  kind: PlateKind;
+  /** Caption number, already formatted: "07" or "02.07". */
+  n: string;
+  /** Index only: the edit's total, shown after the number as " / 18". */
+  tot?: string;
+  eager?: boolean;
+  opener?: boolean;
+  /** Render only the <figure> (used inside PlatePair). */
+  bare?: boolean;
+}
+
+const { photo, kind, n, tot, eager = false, opener = false, bare = false } = Astro.props;
+const widths = kind === 'full' ? WIDTHS.full : WIDTHS.plate;
+const pd = placeDate(photo.place, photo.date);
+---
+
+{
+  bare ? (
+    <figure class="fig" style={`--ar:${photo.ar.toFixed(5)}`} data-n={n}>
+      <a class="plate-link" data-photo href={url(`photo/${photo.id}/`)}>
+        <Photo photo={photo} widths={widths} sizes={plateSizes(kind)} lqip eager={eager} />
+      </a>
+      <figcaption class="cap">
+        <span class="cap-n num">{n}{tot && <span class="cap-tot"> / {tot}</span>}</span>
+        <span class="cap-t"><Fragment set:html={typeset(photo.title)} /></span>
+        {pd && <span class="cap-p"><Fragment set:html={typeset(pd)} /></span>}
+      </figcaption>
+    </figure>
+  ) : (
+    <section class:list={['plate', opener ? 'plate--opener is-opener' : `plate--${kind}`]} aria-label={photo.title}>
+      <figure class="fig" style={`--ar:${photo.ar.toFixed(5)}`} data-n={n}>
+        <a class="plate-link" data-photo href={url(`photo/${photo.id}/`)}>
+          <Photo photo={photo} widths={widths} sizes={plateSizes(kind)} lqip priority={opener} eager={eager} />
+        </a>
+        <figcaption class="cap">
+          <span class="cap-n num">{n}{tot && <span class="cap-tot"> / {tot}</span>}</span>
+          <span class="cap-t"><Fragment set:html={typeset(photo.title)} /></span>
+          {pd && <span class="cap-p"><Fragment set:html={typeset(pd)} /></span>}
+        </figcaption>
+      </figure>
+    </section>
+  )
+}

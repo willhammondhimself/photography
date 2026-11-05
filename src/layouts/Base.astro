@@ -1,0 +1,78 @@
+---
+import { ClientRouter } from 'astro:transitions';
+import { Font } from 'astro:assets';
+import { getImage } from 'astro:assets';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { url, absolute } from '../lib/url';
+import { indexPhotos, site, type Photo } from '../lib/photos';
+import '../styles/tokens.css';
+import '../styles/base.css';
+import '../styles/motion.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  ogPhoto?: Photo;
+  footer?: boolean;
+  page?: string;
+  /** Nav section to mark when the URL alone does not say (the Viewer). */
+  section?: 'Index' | 'Series' | 'Archive' | 'Info';
+}
+
+const {
+  title,
+  description = 'Photographs by Will Hammond: climbing, Yosemite, Hawaiʻi, Greece, portraits and events.',
+  ogPhoto = indexPhotos[0],
+  footer = true,
+  page = '',
+  section,
+} = Astro.props;
+
+const fullTitle = title ? `${title} · ${site.name}` : `${site.name}, photography`;
+const og = ogPhoto
+  ? await getImage({ src: ogPhoto.image, width: Math.min(1280, ogPhoto.width), format: 'jpg', quality: 80 })
+  : undefined;
+// The 404 is served at any missing URL; it has no canonical address of its own.
+const canonical = page === 'notfound' ? undefined : new URL(Astro.url.pathname, Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en" data-page={page}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <link rel="icon" type="image/svg+xml" href={url('favicon.svg')} />
+    <meta name="theme-color" content="#121110" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {og && <meta property="og:image" content={absolute(og.src, Astro.site)} />}
+    {og && <meta property="og:image:width" content={String(og.attributes.width ?? '')} />}
+    {og && <meta property="og:image:height" content={String(og.attributes.height ?? '')} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <Font cssVariable="--font-sans" preload />
+    <!-- Mark images loaded as they arrive, even before the module script runs. -->
+    <script is:inline>document.addEventListener('load',function(e){var t=e.target;if(t&&t.tagName==='IMG'&&t.hasAttribute('data-fade'))t.classList.add('is-loaded')},true);document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='IMG')t.classList.add('is-loaded')},true);</script>
+    <ClientRouter fallback="swap" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to photographs</a>
+    <Header section={section} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    {footer && <Footer />}
+    <script>
+      import '../scripts/motion';
+      import '../scripts/viewer';
+      import '../scripts/archive';
+      import '../scripts/series';
+    </script>
+  </body>
+</html>
